@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Models
+
+model User {
+
+  id        String   @id @default(uuid()) @map("id_user") @db.Char(36)
+  name      String   @unique @map("name") @db.VarChar(50)
+  email     String   @unique @map("email") @db.VarChar(100)
+  password  String   @map("password") @db.Char(64)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deleted   Boolean  @default(false) @map("deleted") @db.Bit(1)
+
+  githubAccount GithubAccount?
+  repositories  Repository[]
+
+  @@map(name: "user")
+}
+
+model GithubAccount {
+
+  id          String   @id @default(uuid()) @map("id_git_account") @db.Char(36)
+  accessToken String   @map("access_token") @db.Char(40)
+  avatarUrl   String?  @map("avatar_url")
+  urlAccount  String   @unique @map("url_account")
+  userId      String   @unique @map("id_user") @db.Char(36)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deleted     Boolean  @default(false) @map("deleted") @db.Bit(1)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map(name: "github_account")
+}
+
+model Repository {
+
+  id          String   @id @default(uuid()) @map("id_repository") @db.Char(36)
+  name        String   @map("name")
+  url         String   @unique @map("url")
+  description String   @map("description") @db.MediumText
+  userId      String   @map("id_user") @db.Char(36)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deleted     Boolean  @default(false) @map("deleted") @db.Bit(1)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map(name: "repository")
+}
