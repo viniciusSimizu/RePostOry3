@@ -6,11 +6,11 @@ import { Request, Response } from 'express';
 export class GithubController {
   constructor(private readonly githubService: GithubService) {}
 
-  @Get('teste/:code')
-  async teste(@Req() request: Request, @Res() response: Response) {
+  @Get('signup/:code')
+  async signUpWithGithub(@Req() request: Request) {
     const CREDENTIALS = await this.githubService
-      .teste(request.params.code)
+      .execute(request.params.code)
       .then((response) => response.data);
-    return response.status(200).json(CREDENTIALS);
+    return CREDENTIALS;
   }
 }
