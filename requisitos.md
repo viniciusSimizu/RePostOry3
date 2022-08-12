@@ -1,0 +1,1 @@
+## Usando da API do GitHub, o usuário consegue coletar os seus projetos existentes na plataforma e armazena-lás no site, que por sua vez, permitirá ao usuário destacar o mesmo, mostrando-ó no Feed de repositórios publicados.
