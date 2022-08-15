@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../global/database/prisma.service';
 import { CreateUserDto } from '../dto/create-user-dto';
-import { AuthService } from '../../../global/guards/Auth/service/auth.service';
-import { ValidateUserDto } from '../../../global/guards/Auth/dto/validate-user.dto';
+import { AuthService } from '../../../global/guards/auth/service/auth.service';
+import { ValidateUserDto } from '../../../global/guards/auth/dto/validate-user.dto';
 import { EncriptyService } from '../../../global/helpers/encripty';
 
 @Injectable()

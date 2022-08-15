@@ -41,25 +41,11 @@ export class RepositoryController {
   }
 
   @Get('list')
-  findAll() {
-    return this.REPOSITORY_SERVICE.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.REPOSITORY_SERVICE.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateRepositoryDto: UpdateRepositoryDto,
-  ) {
-    return this.REPOSITORY_SERVICE.update(+id, updateRepositoryDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.REPOSITORY_SERVICE.remove(+id);
+  async findAll(@Res() response: Response, @Next() next: NextFunction) {
+    try {
+      return response.json(await this.REPOSITORY_SERVICE.findAll());
+    } catch (err) {
+      next(err);
+    }
   }
 }

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UserService } from './service/user.service';
 import { UserController } from './controller/user.controller';
 import { PrismaService } from '../../global/database/prisma.service';
-import { AuthModule } from '../../global/guards/Auth/auth.module';
+import { AuthModule } from '../../global/guards/auth/auth.module';
 import { EncriptyService } from '../../global/helpers/encripty';
 
 @Module({

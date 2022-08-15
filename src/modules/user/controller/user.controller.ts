@@ -11,7 +11,7 @@ import {
 import { UserService } from '../service/user.service';
 import { CreateUserDto } from '../dto/create-user-dto';
 import { NextFunction, Response } from 'express';
-import { ValidateUserDto } from '../../../global/guards/Auth/dto/validate-user.dto';
+import { ValidateUserDto } from '../../../global/guards/auth/dto/validate-user.dto';
 import { errorHandle } from '../../../global/helpers/errorHandle';
 
 @Controller('user')

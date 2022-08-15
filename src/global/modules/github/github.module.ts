@@ -4,7 +4,7 @@ import { GithubController } from './controller/github.controller';
 import { HttpModule } from '@nestjs/axios';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../database/prisma.service';
-import { AuthModule } from '../../guards/Auth/auth.module';
+import { AuthModule } from '../../guards/auth/auth.module';
 
 @Module({
   controllers: [GithubController],

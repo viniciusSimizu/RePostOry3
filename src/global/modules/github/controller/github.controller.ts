@@ -24,13 +24,9 @@ export class GithubController {
     @Next() next: NextFunction,
   ) {
     try {
-      if (!token) {
-        throw new ForbiddenException('Bearer Token required');
-      }
-
       const USER = await this.GITHUB_SERVICE.connectGithubAccount(
         code,
-        token.split(' ')[1],
+        response.locals.user.userId,
       );
 
       return response.json(USER);
@@ -47,7 +43,7 @@ export class GithubController {
   ) {
     try {
       const repositories = await this.GITHUB_SERVICE.listRepositories(
-        token.split(' ')[1],
+        response.locals.user.userId,
       );
       return response.json(repositories);
     } catch (err) {

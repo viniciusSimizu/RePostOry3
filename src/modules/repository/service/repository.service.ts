@@ -21,8 +21,8 @@ export class RepositoryService {
   }
 
   async findAll() {
-    return await this.PRISMA.repository.findMany({
-      where: { deleted: { equals: false } },
+    const repositories = await this.PRISMA.repository.findMany({
+      where: { deleted: false },
       orderBy: { createdAt: 'desc' },
       select: {
         name: true,
@@ -39,17 +39,13 @@ export class RepositoryService {
         },
       },
     });
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} repository`;
-  }
-
-  update(id: number, updateRepositoryDto: UpdateRepositoryDto) {
-    return `This action updates a #${id} repository`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} repository`;
+    return repositories.map((repository) => ({
+      ...repository,
+      githubAccount: {
+        ...repository.githubAccount,
+        name: repository.githubAccount.user.name,
+        user: undefined,
+      },
+    }));
   }
 }
