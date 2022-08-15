@@ -9,7 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GITHUB_ENVIRONMENT } from './global/@config/github.environment';
 import { CONFIGURATION_ENVIRONMENT } from './global/@config/configuration.environment';
 import { UserModule } from './modules/user/user.module';
-import { AuthModule } from './global/guards/Auth/auth.module';
+import { AuthModule } from './global/guards/auth/auth.module';
 import * as Joi from 'joi';
 import { JWT_ENVIRONMENT } from './global/@config/jwt.environment';
 import { JwtValidateMiddleware } from './global/middlewares/jwtValidate.middleware';

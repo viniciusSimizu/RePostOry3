@@ -21,13 +21,7 @@ export class GithubService {
     private readonly PRISMA: PrismaService,
   ) {}
 
-  async connectGithubAccount(code: string, token: string) {
-    const userToken = await this.JWT_SERVICE.verifyAsync(token)
-      .then((payload) => payload)
-      .catch((err) => {
-        throw new ForbiddenException({ mensage: 'Token invalid!', error: err });
-      });
-
+  async connectGithubAccount(code: string, userId: string) {
     const accessToken = await this.HTTP_SERVICE.axiosRef
       .post(
         `${this.GITHUB_URL}/login/oauth/access_token`,
@@ -47,17 +41,15 @@ export class GithubService {
       )
       .then((response) => response.data.access_token)
       .catch((err) => {
-        throw new InternalServerErrorException({
-          mensage: 'Github request failed',
-          error: err,
-        });
+        throw new InternalServerErrorException(
+          errorHandle(err, 'Github request failed'),
+        );
       });
 
     if (!accessToken) {
-      throw new InternalServerErrorException({
-        mensage: 'Github request failed',
-        error: 'Code expired',
-      });
+      throw new InternalServerErrorException(
+        errorHandle(new Error('Code invalid'), 'Github request failed'),
+      );
     }
 
     const githubAccount = await this.HTTP_SERVICE.axiosRef
@@ -86,25 +78,19 @@ export class GithubService {
       data: {
         githubApiId: githubAccount.id,
         urlAccount: githubAccount.html_url,
-        userId: userToken.userId,
         username: githubAccount.login,
-        accessToken: accessToken,
         avatarUrl: githubAccount.avatar_url,
+        accessToken,
+        userId,
       },
     });
 
     return user;
   }
 
-  async listRepositories(token: string) {
-    const userToken = await this.JWT_SERVICE.verifyAsync(token)
-      .then((payload) => payload.userId)
-      .catch((err) => {
-        throw new ForbiddenException({ mensage: 'JWT invalid', error: err });
-      });
-
+  async listRepositories(userId: string) {
     const user = await this.PRISMA.user.findUnique({
-      where: { id: userToken },
+      where: { id: userId },
       select: { githubAccount: { select: { accessToken: true } } },
     });
 
