@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch"]
 }
 
@@ -30,7 +30,7 @@ model User {
 
 model GithubAccount {
   id          String   @id @default(uuid()) @map("id_github_account") @db.Char(36)
-  githubApiId    Int      @unique @map("id_github_account_github_api")
+  githubApiId Int      @unique @map("id_github_account_github_api")
   username    String   @map("username")
   accessToken String   @map("access_token") @db.Char(40)
   avatarUrl   String?  @map("avatar_url")

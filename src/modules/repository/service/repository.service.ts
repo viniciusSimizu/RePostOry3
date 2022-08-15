@@ -22,9 +22,13 @@ export class RepositoryService {
 
   async findAll() {
     const repositories = await this.PRISMA.repository.findMany({
-      where: { deleted: false },
+      where: {
+        deleted: false,
+        githubAccount: { deleted: false, user: { deleted: false } },
+      },
       orderBy: { createdAt: 'desc' },
       select: {
+        id: true,
         name: true,
         url: true,
         description: true,
@@ -47,5 +51,12 @@ export class RepositoryService {
         user: undefined,
       },
     }));
+  }
+
+  async delete(repositoryId: string) {
+    return await this.PRISMA.repository.delete({
+      where: { id: repositoryId },
+      select: { name: true, deleted: true },
+    });
   }
 }
