@@ -1,4 +1,4 @@
-export interface IValidateUser {
+export interface ValidateUserDto {
   username: string;
   password: string;
 }

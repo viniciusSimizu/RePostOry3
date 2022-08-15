@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { compare, genSalt, hash } from 'bcryptjs';
 
 @Injectable()
-export class EncriptifyService {
+export class EncriptyService {
   async hash(password: string) {
     return hash(password, await genSalt());
   }

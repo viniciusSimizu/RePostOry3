@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
 }
 
 datasource db {
@@ -13,8 +14,8 @@ datasource db {
 // Models
 
 model User {
-
   id        String   @id @default(uuid()) @map("id_user") @db.Char(36)
+  slug      String   @unique @map("slug") @db.VarChar(50)
   name      String   @unique @map("name") @db.VarChar(50)
   email     String   @unique @map("email") @db.VarChar(100)
   password  String   @map("password") @db.Char(64)
@@ -23,14 +24,14 @@ model User {
   deleted   Boolean  @default(false) @map("deleted") @db.Bit(1)
 
   githubAccount GithubAccount?
-  repositories  Repository[]
 
   @@map(name: "user")
 }
 
 model GithubAccount {
-
-  id          String   @id @default(uuid()) @map("id_git_account") @db.Char(36)
+  id          String   @id @default(uuid()) @map("id_github_account") @db.Char(36)
+  githubApiId    Int      @unique @map("id_github_account_github_api")
+  username    String   @map("username")
   accessToken String   @map("access_token") @db.Char(40)
   avatarUrl   String?  @map("avatar_url")
   urlAccount  String   @unique @map("url_account")
@@ -39,23 +40,24 @@ model GithubAccount {
   updatedAt   DateTime @updatedAt @map("updated_at")
   deleted     Boolean  @default(false) @map("deleted") @db.Bit(1)
 
-  user User @relation(fields: [userId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+  repositories Repository[]
 
   @@map(name: "github_account")
 }
 
 model Repository {
-
   id          String   @id @default(uuid()) @map("id_repository") @db.Char(36)
+  githubApiId Int      @unique @map("id_repository_github_api")
   name        String   @map("name")
   url         String   @unique @map("url")
-  description String   @map("description") @db.MediumText
-  userId      String   @map("id_user") @db.Char(36)
+  description String?  @map("description") @db.MediumText
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   deleted     Boolean  @default(false) @map("deleted") @db.Bit(1)
+  githubId    String   @map("id_github_account") @db.Char(36)
 
-  user User @relation(fields: [userId], references: [id])
+  githubAccount GithubAccount @relation(fields: [githubId], references: [id])
 
   @@map(name: "repository")
 }

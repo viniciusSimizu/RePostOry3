@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GithubController } from './github.controller';
-import { GithubService } from './github.service';
+import { GithubService } from '../service/github.service';
 
 describe('GithubController', () => {
   let controller: GithubController;
