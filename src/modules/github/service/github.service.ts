@@ -5,9 +5,9 @@ import {
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../../database/prisma.service';
+import { PrismaService } from '../../../global/database/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { errorHandle } from '../../../helpers/errorHandle';
+import { errorHandle } from '../../../global/helpers/errorHandle';
 
 @Injectable()
 export class GithubService {
@@ -66,7 +66,11 @@ export class GithubService {
 
     if (
       await this.PRISMA.githubAccount.findFirst({
-        where: { githubApiId: githubAccount.id },
+        where: {
+          githubApiId: githubAccount.id,
+          deleted: false,
+          user: { deleted: false },
+        },
       })
     ) {
       throw new InternalServerErrorException(
@@ -113,8 +117,8 @@ export class GithubService {
   }
 
   async findRepository(githubId: string, repo: string) {
-    const user = await this.PRISMA.githubAccount.findUnique({
-      where: { id: githubId },
+    const user = await this.PRISMA.githubAccount.findFirst({
+      where: { id: githubId, deleted: false, user: { deleted: false } },
       select: { username: true, accessToken: true },
     });
 

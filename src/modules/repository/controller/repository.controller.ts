@@ -13,7 +13,7 @@ import { RepositoryService } from '../service/repository.service';
 import { CreateRepositoryDto } from '../dto/create-repository.dto';
 import { UpdateRepositoryDto } from '../dto/update-repository.dto';
 import { NextFunction, Response } from 'express';
-import { GithubService } from '../../../global/modules/github/service/github.service';
+import { GithubService } from '../../github/service/github.service';
 
 @Controller('repository')
 export class RepositoryController {
@@ -44,6 +44,19 @@ export class RepositoryController {
   async findAll(@Res() response: Response, @Next() next: NextFunction) {
     try {
       return response.json(await this.REPOSITORY_SERVICE.findAll());
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  @Delete('delete/:id')
+  async deleteRepository(
+    @Param('id') repositoryId: string,
+    @Res() response: Response,
+    @Next() next: NextFunction,
+  ) {
+    try {
+      return response.json(await this.REPOSITORY_SERVICE.delete(repositoryId));
     } catch (err) {
       next(err);
     }

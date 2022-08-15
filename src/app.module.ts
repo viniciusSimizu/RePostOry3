@@ -4,7 +4,7 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common';
-import { GithubModule } from './global/modules/github/github.module';
+import { GithubModule } from './modules/github/github.module';
 import { ConfigModule } from '@nestjs/config';
 import { GITHUB_ENVIRONMENT } from './global/@config/github.environment';
 import { CONFIGURATION_ENVIRONMENT } from './global/@config/configuration.environment';
@@ -13,7 +13,7 @@ import { AuthModule } from './global/guards/auth/auth.module';
 import * as Joi from 'joi';
 import { JWT_ENVIRONMENT } from './global/@config/jwt.environment';
 import { JwtValidateMiddleware } from './global/middlewares/jwtValidate.middleware';
-import { GithubController } from './global/modules/github/controller/github.controller';
+import { GithubController } from './modules/github/controller/github.controller';
 import { UserController } from './modules/user/controller/user.controller';
 import { RepositoryModule } from './modules/repository/repository.module';
 import { RepositoryController } from './modules/repository/controller/repository.controller';
