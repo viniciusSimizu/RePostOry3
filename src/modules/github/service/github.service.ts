@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
@@ -47,7 +48,7 @@ export class GithubService {
       });
 
     if (!accessToken) {
-      throw new InternalServerErrorException(
+      throw new BadRequestException(
         errorHandle(new Error('Code invalid'), 'Github request failed'),
       );
     }
@@ -93,10 +94,34 @@ export class GithubService {
   }
 
   async listRepositories(userId: string) {
-    const user = await this.PRISMA.user.findUnique({
-      where: { id: userId },
+    const user = await this.PRISMA.user.findFirst({
+      where: {
+        AND: {
+          id: userId,
+          githubAccount: { isNot: null },
+        },
+      },
       select: { githubAccount: { select: { accessToken: true } } },
     });
+
+    if (!user) {
+      throw new ForbiddenException('Github account not linked');
+    }
+
+    const userRepoIds = await this.PRISMA.repository
+      .findMany({
+        where: {
+          githubAccount: {
+            user: {
+              id: userId,
+            },
+          },
+        },
+        select: {
+          githubApiId: true,
+        },
+      })
+      .then((repos) => repos.map((repo) => repo.githubApiId));
 
     const repositories: any[] = await this.HTTP_SERVICE.axiosRef
       .get(`${this.API_URL}/user/repos`, {
@@ -105,14 +130,29 @@ export class GithubService {
           Accept: 'application / vnd.github + json',
         },
       })
-      .then((response) => response.data)
-      .catch((err) => err);
+      .then((response) =>
+        response.data.map((repo) => {
+          repo['alreadyAdded'] = userRepoIds.includes(repo.id);
+
+          return repo;
+        }),
+      )
+      .catch((err) => {
+        throw new InternalServerErrorException(
+          errorHandle(err, 'Github Request Failed'),
+        );
+      });
 
     return repositories.map((repository) => ({
-      id: repository.id,
-      name: repository.name,
+      apiId: repository.id,
+      repoName: repository.name,
       description: repository.description,
       url: repository.html_url,
+      alreadyAdded: repository.alreadyAdded,
+      githubAccount: {
+        username: repository.login,
+        avatarUrl: repository.avatar_url,
+      },
     }));
   }
 
@@ -138,7 +178,7 @@ export class GithubService {
 
     return {
       githubApiId: repository.id,
-      name: repository.name,
+      repoName: repository.name,
       url: repository.html_url,
       description: repository.description,
       githubId,

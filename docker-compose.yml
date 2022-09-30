@@ -1,0 +1,31 @@
+version: '3.0'
+services:
+    db:
+        container_name: database_repostory
+        image: mysql
+        restart: always
+        environment:
+            - MYSQL_ROOT_PASSWORD=123mudar
+            - MYSQL_USER=teste
+            - MYSQL_PASSWORD=123mudar
+            - MYSQL_DATABASE=db_repostory
+        ports:
+            -   "8080:3306"
+        volumes:
+            - /volumes/repostory:/var/lib/mysql
+
+    app:
+        environment:
+            - PORT=$PORT
+            - CLIENT_SECRET=$CLIENT_SECRET
+            - CLIENT_ID=$CLIENT_ID
+            - SECRET=$SECRET
+            - EXPIRES_IN=$EXPIRES_IN
+            - DATABASE_URL=mysql://teste:123mudar@db:3306/db_repostory
+            - WAIT_HOSTS=db:3306
+        container_name: backend_repostory
+        build: .
+        ports:
+            - "3000:3000"
+        depends_on:
+            - db

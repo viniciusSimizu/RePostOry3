@@ -4,18 +4,20 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   Next,
   Param,
   Patch,
   Post,
+  Put,
   Req,
   Res,
 } from '@nestjs/common';
 import { UserService } from '../service/user.service';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import { ValidateUserDto } from '../../../global/guards/auth/dto/validate-user.dto';
-import { errorHandle } from '../../../global/helpers/errorHandle';
+import { UpdateUserDto } from '../dto/update-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -50,7 +52,9 @@ export class UserController {
     @Next() next: NextFunction,
   ) {
     try {
-      return response.json(await this.USER_SERVICE.loginUser(credentials));
+      return response
+        .status(200)
+        .json(await this.USER_SERVICE.loginUser(credentials));
     } catch (err) {
       next(err);
     }
@@ -63,7 +67,8 @@ export class UserController {
     @Next() next: NextFunction,
   ) {
     try {
-      return response.json(await this.USER_SERVICE.find(slug));
+      const user = await this.USER_SERVICE.find(slug);
+      return response.json({ user });
     } catch (err) {
       next(err);
     }
@@ -80,22 +85,30 @@ export class UserController {
     );
   }
 
-  @Patch('update')
+  @Get('info')
+  async getInfo(@Res() response: Response, @Next() next: NextFunction) {
+    try {
+      return response.json(
+        await this.USER_SERVICE.getInfo(response.locals.user.userId),
+      );
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  @Put('update')
   async updateUser(
-    @Req() request: Request,
+    @Body() user: UpdateUserDto,
     @Res() response: Response,
     @Next() next: NextFunction,
   ) {
     try {
-      if (!Object.keys(request.body).length) {
+      if (!Object.keys(user).length) {
         throw new BadRequestException('Body is empty');
       }
 
       return response.json(
-        await this.USER_SERVICE.update(
-          request.body,
-          response.locals.user.userId,
-        ),
+        await this.USER_SERVICE.update(user, response.locals.user.userId),
       );
     } catch (err) {
       next(err);
@@ -105,19 +118,37 @@ export class UserController {
   @Delete('delete')
   async deleteUser(@Res() response: Response, @Next() next: NextFunction) {
     try {
+      await this.USER_SERVICE.delete(response.locals.user.userId);
+      return response.json();
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  @Get('verify-signature')
+  async verifySignature(
+    @Headers('Authorization') token: string,
+    @Res() response: Response,
+    @Next() next: NextFunction,
+  ) {
+    try {
       return response.json(
-        await this.USER_SERVICE.delete(response.locals.user.userId),
+        await this.USER_SERVICE.verifySignature(token.split(' ')[1]),
       );
     } catch (err) {
       next(err);
     }
   }
 
-  @Patch('restore')
-  async restoreUser(@Res() response: Response, @Next() next: NextFunction) {
+  @Get('refresh-token')
+  async refreshToken(
+    @Headers('Authorization') refreshToken: string,
+    @Res() response: Response,
+    @Next() next: NextFunction,
+  ) {
     try {
       return response.json(
-        await this.USER_SERVICE.restore(response.locals.user.userId),
+        await this.USER_SERVICE.refreshTokenUser(refreshToken.split(' ')[1]),
       );
     } catch (err) {
       next(err);
