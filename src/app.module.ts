@@ -48,7 +48,13 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(JwtValidateMiddleware)
-      .exclude({ path: 'user/sign([a-z]{2})', method: RequestMethod.POST })
+      .exclude(
+        { path: 'user/sign([a-z]{2})', method: RequestMethod.POST },
+        { path: 'user/list/:username', method: RequestMethod.GET },
+        { path: 'user/find/:slug', method: RequestMethod.GET },
+        { path: 'user/refresh-token', method: RequestMethod.GET },
+        { path: 'repository/list', method: RequestMethod.GET },
+      )
       .forRoutes(GithubController, UserController, RepositoryController);
   }
 }

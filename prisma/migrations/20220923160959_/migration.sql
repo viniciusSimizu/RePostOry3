@@ -5,6 +5,7 @@ CREATE TABLE `user` (
     `name` VARCHAR(50) NOT NULL,
     `email` VARCHAR(100) NOT NULL,
     `password` CHAR(64) NOT NULL,
+    `refresh_token` VARCHAR(255) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
     `deleted` BIT(1) NOT NULL DEFAULT false,
@@ -12,6 +13,7 @@ CREATE TABLE `user` (
     UNIQUE INDEX `user_slug_key`(`slug`),
     UNIQUE INDEX `user_name_key`(`name`),
     UNIQUE INDEX `user_email_key`(`email`),
+    UNIQUE INDEX `user_refresh_token_key`(`refresh_token`),
     PRIMARY KEY (`id_user`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -38,7 +40,7 @@ CREATE TABLE `github_account` (
 CREATE TABLE `repository` (
     `id_repository` CHAR(36) NOT NULL,
     `id_repository_github_api` INTEGER NOT NULL,
-    `name` VARCHAR(191) NOT NULL,
+    `repo_name` VARCHAR(191) NOT NULL,
     `url` VARCHAR(191) NOT NULL,
     `description` MEDIUMTEXT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

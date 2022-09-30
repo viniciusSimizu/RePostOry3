@@ -1,16 +1,14 @@
 import {
   Controller,
-  ForbiddenException,
   Get,
   Headers,
   Next,
   Param,
   Post,
-  Req,
   Res,
 } from '@nestjs/common';
 import { GithubService } from '../service/github.service';
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 
 @Controller('github')
 export class GithubController {
