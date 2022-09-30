@@ -14,14 +14,15 @@ datasource db {
 // Models
 
 model User {
-  id        String   @id @default(uuid()) @map("id_user") @db.Char(36)
-  slug      String   @unique @map("slug") @db.VarChar(50)
-  name      String   @unique @map("name") @db.VarChar(50)
-  email     String   @unique @map("email") @db.VarChar(100)
-  password  String   @map("password") @db.Char(64)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  deleted   Boolean  @default(false) @map("deleted") @db.Bit(1)
+  id           String   @id @default(uuid()) @map("id_user") @db.Char(36)
+  slug         String   @unique @map("slug") @db.VarChar(50)
+  name         String   @unique @map("name") @db.VarChar(50)
+  email        String   @unique @map("email") @db.VarChar(100)
+  password     String   @map("password") @db.Char(64)
+  refreshToken String?  @unique @map("refresh_token") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  deleted      Boolean  @default(false) @map("deleted") @db.Bit(1)
 
   githubAccount GithubAccount?
 
@@ -49,7 +50,7 @@ model GithubAccount {
 model Repository {
   id          String   @id @default(uuid()) @map("id_repository") @db.Char(36)
   githubApiId Int      @unique @map("id_repository_github_api")
-  name        String   @map("name")
+  repoName    String   @map("repo_name")
   url         String   @unique @map("url")
   description String?  @map("description") @db.MediumText
   createdAt   DateTime @default(now()) @map("created_at")

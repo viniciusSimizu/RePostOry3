@@ -1,20 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from '../../../global/database/prisma.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { AuthService } from '../../../global/guards/auth/service/auth.service';
 import { ValidateUserDto } from '../../../global/guards/auth/dto/validate-user.dto';
 import { EncriptyService } from '../../../global/helpers/encripty';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { GithubService } from '../../github/service/github.service';
+import { errorHandle } from '../../../global/helpers/errorHandle';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly PRISMA: PrismaService,
+    private readonly GITHUB_SERVICE: GithubService,
     private readonly AUTH_SERVICE: AuthService,
     private readonly ENCRIPTY_SERVICE: EncriptyService,
   ) {}
 
   async create(user: CreateUserDto) {
+    if (
+      await this.PRISMA.user.findFirst({
+        where: {
+          OR: {
+            email: user.email,
+            name: user.name,
+          },
+        },
+      })
+    ) {
+      throw new BadRequestException('User already exist');
+    }
+
     const newUser = await this.PRISMA.user.create({
       data: {
         ...user,
@@ -22,8 +42,15 @@ export class UserService {
         password: await this.ENCRIPTY_SERVICE.hash(user.password),
         slug: user.name.replace(/\s/g, '-').toLowerCase(),
       },
+      select: {
+        id: true,
+      },
     });
-    return await this.AUTH_SERVICE.login(newUser);
+    const tokens = await this.AUTH_SERVICE.login(newUser);
+
+    await this.helperSaveRefreshToken(newUser.id, tokens.refreshToken);
+
+    return { tokens };
   }
 
   async loginUser(credentials: ValidateUserDto) {
@@ -38,7 +65,12 @@ export class UserService {
         githubAccount: { select: { id: true } },
       },
     });
-    return await this.AUTH_SERVICE.validateUser(credentials, user);
+
+    const tokens = await this.AUTH_SERVICE.validateUser(credentials, user);
+
+    await this.helperSaveRefreshToken(user.id, tokens.refreshToken);
+
+    return { tokens, gitUser: !!user?.githubAccount };
   }
 
   async find(slug: string) {
@@ -46,64 +78,93 @@ export class UserService {
       where: { slug, deleted: false },
       select: {
         name: true,
-        email: true,
 
         githubAccount: {
           select: {
+            id: true,
             avatarUrl: true,
             urlAccount: true,
+            username: true,
 
             repositories: {
-              select: { name: true, description: true, url: true },
+              select: { repoName: true, description: true, url: true },
             },
           },
         },
       },
     });
 
-    return {
-      ...user,
-      avatarUrl: user.githubAccount.avatarUrl,
-      urlAccount: user.githubAccount.urlAccount,
-      repositories: user.githubAccount.repositories,
-      githubAccount: undefined,
-    };
+    return user;
   }
 
   async listByNameOrSlug(username: string) {
-    const user = await this.PRISMA.user.findFirst({
+    const users = await this.PRISMA.user.findMany({
       where: {
         slug: { contains: username },
         deleted: false,
+      },
+      select: {
+        name: true,
+        email: true,
+        slug: true,
+
         githubAccount: {
-          deleted: false,
-          repositories: { every: { deleted: false } },
+          select: {
+            username: true,
+            avatarUrl: true,
+            urlAccount: true,
+
+            repositories: {
+              select: { repoName: true, description: true, url: true },
+            },
+          },
         },
       },
+    });
+
+    return users.map((user) => ({
+      ...user,
+      avatarUrl: user?.githubAccount?.avatarUrl,
+      urlAccount: user?.githubAccount?.urlAccount,
+      repositories: user?.githubAccount?.repositories.length,
+      username: user?.githubAccount?.username,
+      githubAccount: undefined,
+      email: undefined,
+    }));
+  }
+
+  async getInfo(userId: string) {
+    const user = await this.PRISMA.user.findFirst({
+      where: { id: userId },
       select: {
         name: true,
         email: true,
 
         githubAccount: {
           select: {
+            username: true,
             avatarUrl: true,
             urlAccount: true,
 
-            repositories: {
-              select: { name: true, description: true, url: true },
+            _count: {
+              select: {
+                repositories: true,
+              },
             },
           },
         },
       },
     });
 
-    return {
-      ...user,
-      avatarUrl: user.githubAccount.avatarUrl,
-      urlAccount: user.githubAccount.urlAccount,
-      repositories: user.githubAccount.repositories,
-      githubAccount: undefined,
-    };
+    if (user.githubAccount) {
+      await this.GITHUB_SERVICE.listRepositories(userId)
+        .then((gitRepositories) => {
+          user.githubAccount._count['gitRepositories'] = gitRepositories.length;
+        })
+        .catch(() => (user.githubAccount._count['gitRepositories'] = 'Failed'));
+    }
+
+    return user;
   }
 
   async update(user: UpdateUserDto, userId: string) {
@@ -128,18 +189,74 @@ export class UserService {
   }
 
   async delete(userId: string) {
-    return await this.PRISMA.user.update({
+    await this.PRISMA.repository.deleteMany({
+      where: {
+        githubAccount: {
+          userId,
+        },
+      },
+    });
+    await this.PRISMA.githubAccount.deleteMany({
+      where: {
+        userId,
+      },
+    });
+    await this.PRISMA.user.delete({
       where: { id: userId },
-      data: { deleted: true },
-      select: { name: true, deleted: true },
     });
   }
 
-  async restore(userId: string) {
-    return await this.PRISMA.user.update({
+  async verifySignature(token: string) {
+    const userId = await this.AUTH_SERVICE.verifyToken(token);
+
+    const user = await this.PRISMA.user.findFirst({
+      where: {
+        id: userId,
+      },
+      select: {
+        githubAccount: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    });
+
+    return { gitUser: !!user.githubAccount };
+  }
+
+  async refreshTokenUser(refreshToken: string) {
+    const userId = await this.AUTH_SERVICE.refreshToken(refreshToken);
+
+    const user = await this.PRISMA.user
+      .findFirstOrThrow({
+        where: { AND: { id: userId, refreshToken, deleted: false } },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+
+          githubAccount: { select: { id: true } },
+        },
+      })
+      .catch((err) => {
+        throw new ForbiddenException(errorHandle(err, 'Refresh Token Invalid'));
+      });
+
+    const tokens = await this.AUTH_SERVICE.login(user);
+
+    await this.helperSaveRefreshToken(user.id, tokens.refreshToken);
+
+    return { tokens, gitUser: !!user?.githubAccount };
+  }
+
+  async helperSaveRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<void> {
+    await this.PRISMA.user.update({
       where: { id: userId },
-      data: { deleted: false },
-      select: { name: true, deleted: true },
+      data: { refreshToken },
     });
   }
 }

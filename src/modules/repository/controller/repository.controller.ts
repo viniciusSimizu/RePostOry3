@@ -2,16 +2,12 @@ import {
   Controller,
   Get,
   Post,
-  Body,
-  Patch,
   Param,
   Delete,
   Res,
   Next,
 } from '@nestjs/common';
 import { RepositoryService } from '../service/repository.service';
-import { CreateRepositoryDto } from '../dto/create-repository.dto';
-import { UpdateRepositoryDto } from '../dto/update-repository.dto';
 import { NextFunction, Response } from 'express';
 import { GithubService } from '../../github/service/github.service';
 
@@ -44,6 +40,19 @@ export class RepositoryController {
   async findAll(@Res() response: Response, @Next() next: NextFunction) {
     try {
       return response.json(await this.REPOSITORY_SERVICE.findAll());
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  @Get('list/user')
+  async findCurrentUser(@Res() response: Response, @Next() next: NextFunction) {
+    try {
+      return response.json(
+        await this.REPOSITORY_SERVICE.findByCurrentUser(
+          response.locals.user.userId,
+        ),
+      );
     } catch (err) {
       next(err);
     }

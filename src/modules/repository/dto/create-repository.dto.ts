@@ -5,7 +5,7 @@ export class CreateRepositoryDto {
   githubApiId: number;
 
   @IsString()
-  name: string;
+  repoName: string;
 
   @IsUrl()
   url: string;

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRepositoryDto } from '../dto/create-repository.dto';
-import { UpdateRepositoryDto } from '../dto/update-repository.dto';
 import { PrismaService } from '../../../global/database/prisma.service';
 
 @Injectable()
@@ -14,9 +13,9 @@ export class RepositoryService {
         githubApiId: createRepositoryDto.githubApiId,
         url: createRepositoryDto.url,
         description: createRepositoryDto.description,
-        name: createRepositoryDto.name,
+        repoName: createRepositoryDto.repoName,
       },
-      select: { name: true, description: true, url: true },
+      select: { repoName: true, description: true, url: true },
     });
   }
 
@@ -29,7 +28,7 @@ export class RepositoryService {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
-        name: true,
+        repoName: true,
         url: true,
         description: true,
 
@@ -43,6 +42,41 @@ export class RepositoryService {
         },
       },
     });
+
+    return repositories.map((repository) => ({
+      ...repository,
+      githubAccount: {
+        ...repository.githubAccount,
+        name: repository.githubAccount.user.name,
+        user: undefined,
+      },
+    }));
+  }
+
+  async findByCurrentUser(userId: string) {
+    const repositories = await this.PRISMA.repository.findMany({
+      where: {
+        deleted: false,
+        githubAccount: { deleted: false, user: { id: userId, deleted: false } },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        repoName: true,
+        url: true,
+        description: true,
+
+        githubAccount: {
+          select: {
+            username: true,
+            avatarUrl: true,
+
+            user: { select: { name: true } },
+          },
+        },
+      },
+    });
+
     return repositories.map((repository) => ({
       ...repository,
       githubAccount: {
@@ -56,7 +90,7 @@ export class RepositoryService {
   async delete(repositoryId: string) {
     return await this.PRISMA.repository.delete({
       where: { id: repositoryId },
-      select: { name: true, deleted: true },
+      select: { repoName: true, deleted: true },
     });
   }
 }
