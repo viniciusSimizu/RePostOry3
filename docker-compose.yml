@@ -5,26 +5,28 @@ services:
         image: mysql
         restart: always
         environment:
-            - MYSQL_ROOT_PASSWORD=123mudar
-            - MYSQL_USER=teste
-            - MYSQL_PASSWORD=123mudar
-            - MYSQL_DATABASE=db_repostory
-        ports:
-            -   "8080:3306"
+            - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+            - MYSQL_USER=$MYSQL_USER
+            - MYSQL_PASSWORD=$MYSQL_PASSWORD
+            - MYSQL_DATABASE=$MYSQL_DATABASE
+        expose:
+            -   "3306"
         volumes:
             - /volumes/repostory:/var/lib/mysql
 
     app:
+        container_name: backend_repostory
+        build: .
+        image: repostory3-app
         environment:
             - PORT=$PORT
             - CLIENT_SECRET=$CLIENT_SECRET
             - CLIENT_ID=$CLIENT_ID
             - SECRET=$SECRET
             - EXPIRES_IN=$EXPIRES_IN
-            - DATABASE_URL=mysql://teste:123mudar@db:3306/db_repostory
+            - REFRESH_TOKEN_EXPIRES_IN=$REFRESH_TOKEN_EXPIRES_IN
+            - DATABASE_URL=$DATABASE_URL
             - WAIT_HOSTS=db:3306
-        container_name: backend_repostory
-        build: .
         ports:
             - "3000:3000"
         depends_on:
