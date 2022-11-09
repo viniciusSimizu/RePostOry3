@@ -12,6 +12,6 @@ RUN chmod +x /wait
 CMD /wait &&\
     npx prisma generate &&\
     npx prisma migrate deploy &&\
-    yarn start
+    yarn start:prod
 
 EXPOSE 3000
