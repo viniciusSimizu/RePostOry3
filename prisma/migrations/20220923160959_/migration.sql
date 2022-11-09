@@ -15,7 +15,7 @@ CREATE TABLE `user` (
     UNIQUE INDEX `user_email_key`(`email`),
     UNIQUE INDEX `user_refresh_token_key`(`refresh_token`),
     PRIMARY KEY (`id_user`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+);
 
 -- CreateTable
 CREATE TABLE `github_account` (
@@ -34,7 +34,7 @@ CREATE TABLE `github_account` (
     UNIQUE INDEX `github_account_url_account_key`(`url_account`),
     UNIQUE INDEX `github_account_id_user_key`(`id_user`),
     PRIMARY KEY (`id_github_account`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+);
 
 -- CreateTable
 CREATE TABLE `repository` (
@@ -51,7 +51,7 @@ CREATE TABLE `repository` (
     UNIQUE INDEX `repository_id_repository_github_api_key`(`id_repository_github_api`),
     UNIQUE INDEX `repository_url_key`(`url`),
     PRIMARY KEY (`id_repository`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+);
 
 -- AddForeignKey
 ALTER TABLE `github_account` ADD CONSTRAINT `github_account_id_user_fkey` FOREIGN KEY (`id_user`) REFERENCES `user`(`id_user`) ON DELETE RESTRICT ON UPDATE CASCADE;
